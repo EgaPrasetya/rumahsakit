@@ -1,0 +1,194 @@
+sqlplus / as sysdba
+
+CREATE TABLESPACE rumahsakit
+datafile 'D:\praktikum\ega_06978\rumahsakit.dbf'
+size 20M;
+
+
+CREATE USER ega_06978
+IDENTIFIED BY ega
+DEFAULT TABLESPACE rumahsakit
+QUOTA UNLIMITED ON rumahsakit;
+
+GRANT ALL PRIVILEGES TO ega_06978;
+
+conn ega_06978/ega;
+
+create table petugas(
+id_petugas int,
+nama_petugas VARCHAR2(50),
+alamat_petugas VARCHAR2(100),
+jam_jaga VARCHAR2(20),
+constraint PK_PETUGAS primary key (id_petugas)
+);
+
+create table pasien(
+id_pasien int,
+nama_pasien VARCHAR2(50),
+alamat_pasien VARCHAR2(100),
+tgl_datang VARCHAR2(20),
+keluhan VARCHAR2(20),
+constraint PK_PASIEN primary key (id_pasien)
+);
+
+create table dokter(
+id_dokter int,
+nama_dokter VARCHAR2(50),
+alamat_dokter VARCHAR2(100),
+spesialis VARCHAR2(20),
+constraint PK_DOKTER primary key (id_dokter)
+);
+
+create table rawat_inap(
+id_petugas int,
+id_pasien int,
+id_dokter int,
+id_kamar int,
+nama_ruang VARCHAR2(50),
+constraint PK_KAMAR primary key (id_kamar)
+);
+
+
+alter table rawat_inap
+add constraint fk_petugas foreign key (id_petugas) 
+references petugas (id_petugas)
+add constraint fk_pasien foreign key (id_pasien) 
+references pasien (id_pasien)
+add constraint fk_dokter foreign key (id_dokter) 
+references dokter (id_dokter)
+;
+
+insert into petugas (id_petugas,nama_petugas,alamat_petugas,jam_jaga) values (101, 'Deva Agna', 'Sampit', '08:00 - 16:00');
+insert into petugas (id_petugas,nama_petugas,alamat_petugas,jam_jaga) values (102, 'Ega Prasetya', 'Madiun', '16:00 - 22:00');
+insert into petugas (id_petugas,nama_petugas,alamat_petugas,jam_jaga) values (103, 'Sofyan Wahid', 'Lamongan', '22:00 - 08:00');
+
+insert all
+into pasien (id_pasien,nama_pasien,alamat_pasien,tgl_datang,keluhan) values (1, 'Revan', 'Madiun', TO_DATE('11/05/2020','dd/mm/yyyy'),'Panas')
+into pasien (id_pasien,nama_pasien,alamat_pasien,tgl_datang,keluhan) values (2, 'Dede Kurniawan', 'Sampit', TO_DATE('12/05/2020','dd/mm/yyyy'),'Batuk')
+into pasien (id_pasien,nama_pasien,alamat_pasien,tgl_datang,keluhan) values (3, 'Dion', 'Sampit', TO_DATE('13/05/2020','dd/mm/yyyy'),'Demam')
+select 1 from dual;
+
+insert all
+into dokter (id_dokter,nama_dokter,alamat_dokter,spesialis) values (1011, 'Dr. Deva Agna', 'Sampit', 'Luka Dalam')
+into dokter (id_dokter,nama_dokter,alamat_dokter,spesialis) values (1022, 'Dr. Ega Prasetya', 'Madiun', 'Luka Luar')
+into dokter (id_dokter,nama_dokter,alamat_dokter,spesialis) values (1033, 'Dr. Sofyan Wahid', 'Lamongan', 'Bedah')
+select 1 from dual;
+
+insert all
+into rawat_inap (id_kamar,nama_ruang) values (10111, 'A1')
+into rawat_inap (id_kamar,nama_ruang) values (10222, 'A2')
+into rawat_inap (id_kamar,nama_ruang) values (10333, 'A3')
+into rawat_inap (id_kamar,nama_ruang) values (10444, 'A4')
+into rawat_inap (id_kamar,nama_ruang) values (10555, 'A5')
+select 1 from dual;
+
+
+update petugas set nama_petugas ='Niko Sabyan', id_petugas ='102' where id_petugas <4 and id_petugas like '%a%' or id_petugas like '%a%';
+
+UPDATE petugas SET nama_petugas = 'Niko Sabyan' where id_petugas = 102;
+
+DELETE from petugas where id_petugas = 103;
+
+savepoint memory;
+
+commit;
+
+rollback;
+
+select * from rawat_inap order by id_kamar;
+
+Group BY
+
+select nama_ruang from rawat_inap
+
+select id_kamar, max(nama_ruang) as tertinggi,
+min(nama_ruang) as terendah from rawat_inap
+group by id_kamar;
+
+select id_kamar, count(nama_ruang) as banyak_nilai from rawat_inap
+where id_kamar = 10111 or id_kamar = 10222 or id_kamar = 10333 or id_kamar = 10444 or id_kamar = 10555 group by id_kamar;
+
+select SUM(id_kamar) as total_nilai from
+rawat_inap;
+
+select AVG(id_kamar) as Rata2_Nilai from
+rawat_inap;
+
+SELECT id_kamar, (SELECT MAX(nama_ruang) AS
+tertinggi FROM rawat_inap) AS Tinggi,
+(SELECT MIN(nama_ruang) AS terendah FROM rawat_inap) AS Rendah FROM rawat_inap;
+
+SELECT id_kamar, (SELECT COUNT(nama_ruang) AS
+Banyak_Nilai
+FROM rawat_inap
+WHERE id_kamar LIKE 102 AND nama_ruang < 90)
+AS Banyak_Nilai FROM rawat_inap;
+
+SELECT id_kamar, (SELECT SUM(id_kamar) AS
+Total_Nilai FROM rawat_inap)
+AS Total_Nilai FROM rawat_inap;
+
+SELECT id_kamar, (SELECT AVG(id_kamar) AS
+Rata2_Nilai FROM rawat_inap)
+AS Total_Nilai FROM rawat_inap;
+
+SELECT id_kamar, (SELECT AVG(id_kamar) AS
+Rata2_Nilai FROM rawat_inap)
+AS Total_Nilai FROM rawat_inap GROUP BY id_kamar;
+
+SELECT id_kamar FROM rawat_inap
+WHERE id_kamar < (SELECT SUM (id_kamar)
+AS Total_Nilai FROM rawat_inap);
+
+SELECT id_kamar, (SELECT AVG(id_kamar) AS
+Total_Nilai FROM rawat_inap
+WHERE id_kamar <(SELECT SUM(id_kamar) AS Total_Nilai
+FROM rawat_inap)) AS Rata2_Nilai FROM rawat_inap GROUP BY id_kamar;
+
+select a.nama_dokter, b.nama_ruang
+from DOKTER a join
+RAWAT_INAP b
+on a.id_dokter = b.id_dokter
+Where rownum < 10;
+
+select a.nama_petugas, b.id_kamar, a.alamat_petugas, a.jam_jaga, b.nama_ruang
+from petugas a
+left join rawat_inap b
+on a.id_petugas = b.id_petugas
+where rownum < 10;
+
+select a.nama_petugas, b.id_kamar, a.alamat_petugas, a.jam_jaga, b.nama_ruang
+from petugas a
+right join rawat_inap b
+on a.id_petugas = b.id_petugas
+where rownum < 10;
+
+create view id_petugas
+as select * from petugas; 
+
+create view join
+as select a.nama_petugas, b.id_kamar
+from petugas a join
+rawat_inap b
+on a. id_petugas=b.id_petugas
+where rownum < 10;
+
+create view left_join
+as select a.id_petugas, b.id_kamar, a.alamat_petugas, a.jam_jaga, b.nama_ruang
+from petugas a
+left join rawat_inap b
+on a.id_petugas = b.id_petugas
+where rownum < 10;
+
+create view right_join
+as select a.id_petugas, b.id_kamar, a.alamat_petugas, a.jam_jaga, b.nama_ruang
+from petugas a
+right join rawat_inap b
+on a.id_petugas = b.id_petugas
+where rownum < 10;
+
+select * from join;
+
+select * from left_join;
+
+select * from right_join;
